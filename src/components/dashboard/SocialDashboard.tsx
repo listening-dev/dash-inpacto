@@ -6,7 +6,7 @@ import { useSupabaseData, Post } from '../../hooks/useSupabaseData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { differenceInDays, parseISO, format, addDays, startOfToday } from 'date-fns';
 import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, HeartHandshake, RefreshCw, Search, X as XIcon } from 'lucide-react';
-import { getPlatform } from '../../config/platforms';
+import { getPlatform, FORMAT_NORMALIZATION } from '../../config/platforms';
 import { fmtNum } from '../../utils/formatters';
 import { SkeletonMetricCard, SkeletonChart, SkeletonTableRow } from '../ui/Skeleton';
 
@@ -326,7 +326,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                             { label: 'Alcance', value: sb.alcance, icon: <HeartHandshake size={16} />, tooltip: 'alcance' },
                             { label: 'Visualizacoes', value: sb.visualizacoes, icon: <Eye size={16} />, tooltip: 'visualizacoes' },
                             { label: 'Interacoes', value: sb.interacoes, icon: <Heart size={16} />, tooltip: 'interacoes' },
-                            { label: 'Posts', value: sb.posts.length, icon: <MessageCircle size={16} /> },
+                            { label: 'Posts', value: sb.posts.filter(p => p.formato !== 'STORY').length, icon: <MessageCircle size={16} /> },
                         ].map((card, i) => (
                             <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
                                 <div className="flex items-center gap-2 text-gray-500 mb-2">{card.icon}<span className="text-xs font-bold uppercase tracking-wider inline-flex items-center">{card.label}{card.tooltip && <MetricTooltip metric={card.tooltip} />}</span></div>
@@ -666,10 +666,19 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
             const selectedFormats = currentFixoTab.formats;
 
             let specificRows;
+            // Normalize the config formats to match what aggregatePlatform stores in p.formato
+            // e.g. 'IMAGE' in config → 'IMAGEM' after normalization; 'CAROUSEL' → 'CARROSSEL'
+            const formatsNormalized = new Set(
+                selectedFormats.map(f => {
+                    const upper = f.toUpperCase();
+                    return FORMAT_NORMALIZATION[upper] ?? upper;
+                })
+            );
+
             if (isStoriesTab) {
                 // For stories, group directly by month from posts (not from sb.monthly)
                 const storyPosts = sb.posts.filter(p =>
-                    selectedFormats.map(f => f.toUpperCase()).includes((p.formato || 'OUTROS').toUpperCase())
+                    formatsNormalized.has(p.formato || 'OUTROS')
                 );
                 const MES_MAP: Record<string, string> = {
                     '01': 'Jan', '02': 'Fev', '03': 'Mar', '04': 'Abr',
@@ -698,12 +707,11 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                         };
                     });
             } else {
-                // Generic format-based tab: filter posts matching the formats from config
-                const formatsUpper = selectedFormats.map(f => f.toUpperCase());
+                // Generic format-based tab: filter posts matching the normalized formats
                 specificRows = sb.monthly.map(m => {
                     const monthPosts = sb.posts.filter(p => {
                         const postMonth = (p.date || '').substring(0, 7);
-                        return postMonth === m.date && formatsUpper.includes((p.formato || 'OUTROS').toUpperCase());
+                        return postMonth === m.date && formatsNormalized.has(p.formato || 'OUTROS');
                     });
                     const sumVisualizacoes = monthPosts.reduce((s, p) => s + (p.visualizacoes || 0), 0);
                     const sumInteracoes = monthPosts.reduce((s, p) => s + ((p.curtidas || 0) + (p.comentarios || 0) + (p.compartilhamentos || 0) + (p.salvamentos || 0)), 0);
