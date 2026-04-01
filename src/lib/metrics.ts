@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase as defaultClient } from './supabaseClient';
+import { getPlatform, platformUsesCurtidasTotal, FORMAT_NORMALIZATION, PLATFORM_IDS } from '../config/platforms';
 import type { KpiSnapshotData, EvolucaoSnapshotRow, FormatoSnapshotRow, PostSnapshotRow, PlataformaSnapshotRow } from '../types/relatorio';
 
 // ─── Re-exported public types ────────────────────────────────────────────────
@@ -305,8 +306,8 @@ export function aggregatePlatform(
         ? batch.posts
         : batch.posts.filter(p => p.platform === platform);
 
-    // Include stories only for instagram or all
-    const includeStories = platform === 'instagram' || platform === 'all';
+    // Include stories for platforms that have stories, or for 'all'
+    const includeStories = platform === 'all' || (getPlatform(platform)?.hasStories ?? false);
 
     // Build story Post objects
     const storyList: Post[] = includeStories
@@ -328,14 +329,11 @@ export function aggregatePlatform(
         } as Post))
         : [];
 
-    // Normalize formats and build full post list
+    // Normalize formats using the config-driven map (FORMAT_NORMALIZATION in platforms.ts)
     const postList: Post[] = [
         ...filteredRawPosts.map(p => {
-            let fmt = (p.formato?.toUpperCase()) || 'OUTROS';
-            if (fmt === 'CAROUSEL' || fmt === 'ALBUM') fmt = 'CARROSSEL';
-            else if (fmt === 'IMAGE' || fmt === 'PHOTO') fmt = 'IMAGEM';
-            else if (fmt === 'VIDEO') fmt = 'VÍDEO';
-            else if (fmt === 'REEL') fmt = 'REELS';
+            const raw = (p.formato?.toUpperCase()) || 'OUTROS';
+            const fmt = FORMAT_NORMALIZATION[raw] ?? raw;
             return { ...p, formato: fmt } as Post;
         }),
         ...storyList,
@@ -376,18 +374,13 @@ export function aggregatePlatform(
         return latestFollowersByPlatform[platform] || 0;
     })();
 
-    // Likes arbitration (curtidas_total preference for facebook/instagram/all)
+    // Likes arbitration: plataformas com useCurtidasTotal=true preferem curtidas_total
+    // do daily_metrics (mais preciso) em vez de somar curtidas por post.
     let finalLikes = curtidasTotal;
     let finalComments = comentariosTotal;
     let finalShares = compartilhamentosTotal;
 
-    if (platform === 'facebook' || platform === 'instagram') {
-        finalComments = postList.reduce((acc, p) => acc + (p.comentarios || 0), 0);
-        finalShares = postList.reduce((acc, p) => acc + (p.compartilhamentos || 0), 0);
-        const likesFromMetrics = rows.reduce((s, r) => s + ((r.curtidas_total as number) || 0), 0);
-        const likesFromPosts = postList.reduce((acc, p) => acc + (p.curtidas || 0), 0);
-        finalLikes = likesFromMetrics > 0 ? likesFromMetrics : likesFromPosts;
-    } else if (platform === 'all') {
+    if (platformUsesCurtidasTotal(platform)) {
         finalComments = postList.reduce((acc, p) => acc + (p.comentarios || 0), 0);
         finalShares = postList.reduce((acc, p) => acc + (p.compartilhamentos || 0), 0);
         const likesFromMetrics = rows.reduce((s, r) => s + ((r.curtidas_total as number) || 0), 0);
@@ -513,8 +506,6 @@ export interface WidgetSnapshotMap {
     'tabela.plataformas': PlataformaSnapshotRow[];
 }
 
-const _SNAPSHOT_PLATFORMS = ['instagram', 'facebook', 'linkedin', 'twitter'] as const;
-
 /**
  * Fetches once and projects all six widget snapshots in a single Supabase
  * round-trip. Subsequent calls within BATCH_CACHE_TTL_MS for the same date
@@ -570,8 +561,8 @@ export async function captureAllSnapshots(
         .sort((a, b) => (a.visualizacoes || 0) - (b.visualizacoes || 0))
         .slice(0, 5) as PostSnapshotRow[];
 
-    // tabela.plataformas — always per-platform regardless of caller's `platform`
-    const plataformas: PlataformaSnapshotRow[] = _SNAPSHOT_PLATFORMS
+    // tabela.plataformas — sempre por plataforma, usa PLATFORM_IDS do config
+    const plataformas: PlataformaSnapshotRow[] = PLATFORM_IDS
         .map(pid => {
             const pm = aggregatePlatform(batch, pid);
             return {
@@ -597,7 +588,8 @@ export async function captureAllSnapshots(
 
 // ─── useMetricsBatch hook ─────────────────────────────────────────────────────
 
-const PLATFORMS_TO_AGGREGATE = ['instagram', 'facebook', 'linkedin', 'twitter'] as const;
+// Derivado do config — adicionar plataforma em platforms.ts é suficiente
+const PLATFORMS_TO_AGGREGATE = PLATFORM_IDS;
 
 /**
  * Fetches once via fetchMetricsBatch and aggregates for all platforms + 'all'.
