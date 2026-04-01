@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 export const METRIC_GLOSSARY: Record<string, string> = {
     // Por plataforma / por publicacao

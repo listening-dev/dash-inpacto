@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Calendar, History, Lock, LogOut } from 'lucide-react';
-import { differenceInDays, parseISO, format, subDays, startOfToday, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, subDays, startOfToday, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { PLATFORMS } from '../../config/platforms';
 
 // ─── NavItem ──────────────────────────────────────────────────────────────────
@@ -78,13 +78,6 @@ interface DatePickerProps {
 }
 
 const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, latestDataDate }: DatePickerProps) => {
-  let activeRange = 0;
-  try {
-    activeRange = differenceInDays(parseISO(endDate), parseISO(startDate));
-  } catch {
-    activeRange = 0;
-  }
-
   const today = startOfToday();
 
   const handleQuickRange = (preset: 'yesterday' | '7d' | '30d' | 'thisMonth' | 'lastMonth' | '3m' | 'year') => {

@@ -8,7 +8,7 @@ import { differenceInDays, parseISO, format, addDays, startOfToday } from 'date-
 import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, HeartHandshake, RefreshCw, Search, X as XIcon } from 'lucide-react';
 import { getPlatform } from '../../config/platforms';
 import { fmtNum } from '../../utils/formatters';
-import { SkeletonMetricCard, SkeletonKpiCard, SkeletonChart, SkeletonTableRow, SkeletonPostCard } from '../ui/Skeleton';
+import { SkeletonMetricCard, SkeletonChart, SkeletonTableRow } from '../ui/Skeleton';
 
 interface SocialDashboardProps {
     platform: 'instagram' | 'facebook' | 'linkedin' | 'twitter';
