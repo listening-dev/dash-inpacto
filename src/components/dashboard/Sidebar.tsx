@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Calendar, History, Lock, LogOut } from 'lucide-react';
-import { differenceInDays, parseISO, format, subDays, startOfToday } from 'date-fns';
+import { differenceInDays, parseISO, format, subDays, startOfToday, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { PLATFORMS } from '../../config/platforms';
 
 // ─── NavItem ──────────────────────────────────────────────────────────────────
@@ -85,18 +85,69 @@ const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, lates
     activeRange = 0;
   }
 
-  const handleQuickRange = (_label: string, days?: number, isYesterday?: boolean) => {
-    if (isYesterday) {
-      const yesterday = subDays(startOfToday(), 1);
-      setEndDate(format(yesterday, 'yyyy-MM-dd'));
-      setStartDate(format(yesterday, 'yyyy-MM-dd'));
-    } else if (days !== undefined) {
-      const end = startOfToday();
-      const start = subDays(end, days);
-      setEndDate(format(end, 'yyyy-MM-dd'));
-      setStartDate(format(start, 'yyyy-MM-dd'));
+  const today = startOfToday();
+
+  const handleQuickRange = (preset: 'yesterday' | '7d' | '30d' | 'thisMonth' | 'lastMonth' | '3m' | 'year') => {
+    let start: Date;
+    let end: Date = today;
+
+    switch (preset) {
+      case 'yesterday': {
+        const yesterday = subDays(today, 1);
+        start = yesterday;
+        end = yesterday;
+        break;
+      }
+      case '7d':
+        start = subDays(today, 7);
+        break;
+      case '30d':
+        start = subDays(today, 30);
+        break;
+      case 'thisMonth':
+        start = startOfMonth(today);
+        end = today;
+        break;
+      case 'lastMonth': {
+        const lastM = subMonths(today, 1);
+        start = startOfMonth(lastM);
+        end = endOfMonth(lastM);
+        break;
+      }
+      case '3m':
+        start = subDays(today, 90);
+        break;
+      case 'year':
+        start = subDays(today, 365);
+        break;
+      default:
+        return;
     }
+
+    setStartDate(format(start, 'yyyy-MM-dd'));
+    setEndDate(format(end, 'yyyy-MM-dd'));
   };
+
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    // Se início ficou depois do término, ajusta o término
+    if (endDate && value > endDate) setEndDate(value);
+  };
+
+  const handleEndDateChange = (value: string) => {
+    setEndDate(value);
+    // Se término ficou antes do início, ajusta o início
+    if (startDate && value < startDate) setStartDate(value);
+  };
+
+  const quickButtons = [
+    { label: 'Ontem', preset: 'yesterday' as const },
+    { label: '7D', preset: '7d' as const },
+    { label: '30D', preset: '30d' as const },
+    { label: 'Mês', preset: 'thisMonth' as const },
+    { label: 'Ant.', preset: 'lastMonth' as const },
+    { label: '3M', preset: '3m' as const },
+  ];
 
   return (
     <div className="mx-4 mb-6 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm relative group flex-shrink-0">
@@ -109,29 +160,16 @@ const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, lates
         <span className="text-[11px] font-bold text-gray-700 uppercase tracking-widest">Intervalo</span>
       </div>
 
-      <div className="flex gap-1.5 mb-5 relative z-10">
-        {[
-          { label: 'Ontem', isYesterday: true },
-          { label: '7D', days: 7 },
-          { label: '30D', days: 30 }
-        ].map((btn) => {
-          let isActive = false;
-          if (btn.isYesterday && activeRange === 0) isActive = true;
-          if (btn.days && activeRange === btn.days) isActive = true;
-
-          return (
-            <button
-              key={btn.label}
-              onClick={() => handleQuickRange(btn.label, btn.days, btn.isYesterday)}
-              className={`flex-1 py-1 px-1 rounded-md text-[10px] font-bold transition-all
-                ${isActive
-                  ? 'bg-[#C0392B] text-white shadow-md shadow-red-200 scale-105'
-                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
-            >
-              {btn.label}
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-3 gap-1.5 mb-5 relative z-10">
+        {quickButtons.map((btn) => (
+          <button
+            key={btn.label}
+            onClick={() => handleQuickRange(btn.preset)}
+            className="py-1 px-1 rounded-md text-[10px] font-bold transition-all bg-gray-50 text-gray-500 hover:bg-[#C0392B] hover:text-white"
+          >
+            {btn.label}
+          </button>
+        ))}
       </div>
 
       <div className="space-y-4 relative z-10">
@@ -140,7 +178,7 @@ const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, lates
           <input
             type="date"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => handleStartDateChange(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold bg-gray-50/50 text-gray-800 cursor-pointer focus:ring-2 focus:ring-red-100 focus:border-[#C0392B] focus:outline-none transition-all"
           />
         </div>
@@ -149,7 +187,8 @@ const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, lates
           <input
             type="date"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            min={startDate}
+            onChange={(e) => handleEndDateChange(e.target.value)}
             className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold bg-gray-50/50 text-gray-800 cursor-pointer focus:ring-2 focus:ring-red-100 focus:border-[#C0392B] focus:outline-none transition-all"
           />
         </div>

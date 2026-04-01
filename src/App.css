@@ -1,0 +1,461 @@
+/* App.css - Dashboard In.Pacto com identidade visual completa */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Variaveis de cores In.Pacto */
+:root {
+  /* Cores principais In.Pacto */
+  --inpacto-red-primary: #C0392B;
+  --inpacto-red-secondary: #E74C3C;
+  --inpacto-red-light: #FDEDEC;
+  --inpacto-red-dark: #922B21;
+
+  --inpacto-copper-primary: #D35400;
+  --inpacto-copper-light: #FBEEE6;
+
+  --inpacto-orange-primary: #E67E22;
+  --inpacto-orange-light: #FDF2E9;
+
+  --inpacto-gold-primary: #F39C12;
+  --inpacto-gold-light: #FEF5E7;
+  --inpacto-gold-dark: #D68910;
+
+  --inpacto-dark: #2C3E50;
+  --inpacto-dark-light: #34495E;
+
+  /* Gradientes In.Pacto */
+  --inpacto-gradient-main: linear-gradient(135deg, #C0392B 0%, #D35400 100%);
+  --inpacto-gradient-sidebar: linear-gradient(180deg, #C0392B 0%, #D35400 50%, #E67E22 100%);
+  --inpacto-gradient-accent: linear-gradient(135deg, #E67E22 0%, #F39C12 100%);
+  --inpacto-gradient-bg: linear-gradient(135deg, #F5F0EB 0%, #FDEDEC 100%);
+
+  /* Cores de apoio */
+  --inpacto-gray-50: #F8F9FA;
+  --inpacto-gray-100: #F1F3F5;
+  --inpacto-gray-200: #E2E8F0;
+  --inpacto-gray-300: #CBD5E1;
+  --inpacto-gray-600: #475569;
+  --inpacto-gray-700: #334155;
+  --inpacto-gray-800: #1E293B;
+
+  /* Sombras personalizadas */
+  --inpacto-shadow-red: 0 4px 20px rgba(192, 57, 43, 0.15);
+  --inpacto-shadow-gold: 0 4px 20px rgba(243, 156, 18, 0.15);
+  --inpacto-shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --inpacto-shadow-medium: 0 4px 15px rgba(0, 0, 0, 0.12);
+  --inpacto-shadow-strong: 0 8px 25px rgba(192, 57, 43, 0.25);
+
+  /* Cores das redes sociais */
+  --color-facebook: #1877F2;
+  --color-instagram: #E4405F;
+  --color-linkedin: #0077B5;
+  --color-twitter: #14171A;
+}
+
+/* Reset e configuracoes base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: var(--inpacto-gradient-bg);
+  color: var(--inpacto-gray-800);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout principal */
+.dashboard-container {
+  min-height: 100vh;
+  background: var(--inpacto-gradient-bg);
+}
+
+/* Header In.Pacto */
+.header-inpacto {
+  background: var(--inpacto-gradient-main);
+  color: white;
+  box-shadow: var(--inpacto-shadow-medium);
+  border-bottom: 3px solid var(--inpacto-orange-primary);
+}
+
+/* Sidebar In.Pacto */
+.sidebar-inpacto {
+  background: var(--inpacto-gradient-sidebar);
+  box-shadow: var(--inpacto-shadow-red);
+  border-right: 1px solid rgba(230, 126, 34, 0.3);
+}
+
+/* Cards In.Pacto */
+.card-inpacto {
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--inpacto-shadow-soft);
+  border: 1px solid rgba(192, 57, 43, 0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.card-inpacto:hover {
+  box-shadow: var(--inpacto-shadow-medium);
+  transform: translateY(-2px);
+}
+
+/* Navegacao */
+.nav-item-inpacto {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item-inpacto:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.nav-item-inpacto:hover:before {
+  left: 100%;
+}
+
+.nav-item-inpacto.active {
+  background: white;
+  color: var(--inpacto-red-primary);
+  box-shadow: var(--inpacto-shadow-medium);
+  transform: scale(1.02);
+}
+
+.nav-item-inpacto:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+
+/* Botoes In.Pacto */
+.btn-inpacto-primary {
+  background: var(--inpacto-gradient-main);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--inpacto-shadow-soft);
+}
+
+.btn-inpacto-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--inpacto-shadow-strong);
+}
+
+.btn-inpacto-secondary {
+  background: var(--inpacto-gradient-accent);
+  color: var(--inpacto-dark);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-inpacto-secondary:hover {
+  background: var(--inpacto-gold-dark);
+  color: rgb(0, 0, 0);
+  transform: translateY(-1px);
+}
+
+/* Classes utilitarias In.Pacto */
+.text-inpacto-red { color: var(--inpacto-red-primary); }
+.text-inpacto-copper { color: var(--inpacto-copper-primary); }
+.text-inpacto-orange { color: var(--inpacto-orange-primary); }
+.text-inpacto-gold { color: var(--inpacto-gold-primary); }
+
+.bg-inpacto-red { background-color: var(--inpacto-red-primary); }
+.bg-inpacto-red-light { background: var(--inpacto-red-light); }
+.bg-inpacto-orange { background-color: var(--inpacto-orange-primary); }
+.bg-inpacto-orange-light { background: var(--inpacto-orange-light); }
+
+.border-inpacto-red { border-color: var(--inpacto-red-primary); }
+.border-inpacto-orange { border-color: var(--inpacto-orange-primary); }
+
+/* Gradientes aplicados */
+.gradient-inpacto-main { background: var(--inpacto-gradient-main); }
+.gradient-inpacto-sidebar { background: var(--inpacto-gradient-sidebar); }
+.gradient-inpacto-accent { background: var(--inpacto-gradient-accent); }
+
+/* Cores das redes sociais */
+.text-facebook { color: var(--color-facebook); }
+.text-instagram { color: var(--color-instagram); }
+.text-linkedin { color: var(--color-linkedin); }
+.text-twitter { color: var(--color-twitter); }
+
+.bg-facebook { background-color: var(--color-facebook); }
+.bg-instagram { background-color: var(--color-instagram); }
+.bg-linkedin { background-color: var(--color-linkedin); }
+.bg-twitter { background-color: var(--color-twitter); }
+
+.border-facebook { border-color: var(--color-facebook); }
+.border-instagram { border-color: var(--color-instagram); }
+.border-linkedin { border-color: var(--color-linkedin); }
+.border-twitter { border-color: var(--color-twitter); }
+
+/* Animacoes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-inpacto {
+  animation: pulse 2s infinite;
+}
+
+/* Componentes especificos */
+.metric-card-inpacto {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--inpacto-shadow-soft);
+  border-left: 4px solid var(--inpacto-red-primary);
+  transition: all 0.3s ease;
+}
+
+.metric-card-inpacto:hover {
+  box-shadow: var(--inpacto-shadow-medium);
+  transform: translateY(-3px);
+  border-left-color: var(--inpacto-orange-primary);
+}
+
+.metric-value-inpacto {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--inpacto-red-primary);
+  line-height: 1.2;
+}
+
+.metric-label-inpacto {
+  font-size: 0.875rem;
+  color: var(--inpacto-gray-600);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tabelas */
+.table-inpacto {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--inpacto-shadow-soft);
+}
+
+.table-inpacto th {
+  background: var(--inpacto-gradient-main);
+  color: white;
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.table-inpacto td {
+  padding: 16px;
+  border-bottom: 1px solid var(--inpacto-gray-200);
+  font-size: 14px;
+}
+
+.table-inpacto tr:hover {
+  background: var(--inpacto-red-light);
+}
+
+/* Formularios */
+.input-inpacto {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--inpacto-gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.input-inpacto:focus {
+  outline: none;
+  border-color: var(--inpacto-red-primary);
+  box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.1);
+}
+
+/* Status e badges */
+.badge-inpacto {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-success { background: #E8F8F5; color: #1E8449; }
+.badge-warning { background: var(--inpacto-gold-light); color: var(--inpacto-gold-dark); }
+.badge-info { background: #EBF5FB; color: #2E86C1; }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .sidebar-inpacto {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .metric-card-inpacto {
+    padding: 16px;
+  }
+
+  .metric-value-inpacto {
+    font-size: 1.5rem;
+  }
+
+  .table-inpacto {
+    font-size: 12px;
+  }
+
+  .table-inpacto th,
+  .table-inpacto td {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-value-inpacto {
+    font-size: 1.25rem;
+  }
+
+  .btn-inpacto-primary,
+  .btn-inpacto-secondary {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+
+/* Impressao */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .sidebar-inpacto {
+    display: none;
+  }
+
+  .card-inpacto {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+
+  .btn-inpacto-primary,
+  .btn-inpacto-secondary {
+    display: none;
+  }
+
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Estados de loading */
+.loading-inpacto {
+  background: linear-gradient(90deg, var(--inpacto-gray-200) 25%, var(--inpacto-gray-100) 50%, var(--inpacto-gray-200) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Tooltips customizados */
+.tooltip-inpacto {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-inpacto::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--inpacto-gray-800);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.tooltip-inpacto:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-5px);
+}

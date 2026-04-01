@@ -1,0 +1,184 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F5F0EB;
+  color: #0F172A;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Classes utilitarias personalizadas - Neo-brutalism / Soft */
+.card {
+  @apply bg-white border border-neo-border rounded-2xl shadow-sm p-6 mb-6 transition-transform duration-200;
+}
+
+.card:hover {
+  @apply shadow-md;
+}
+
+.brutalist-card {
+  @apply bg-white border border-neo-border rounded-2xl shadow-sm p-6 mb-6 transition-all duration-200 hover:shadow-md;
+}
+
+.dashboard-title {
+  @apply text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight;
+}
+
+.dashboard-subtitle {
+  @apply text-lg md:text-xl font-medium text-gray-600 mb-3 block;
+}
+
+.metric-card {
+  @apply flex flex-col justify-between bg-white border border-neo-border rounded-2xl shadow-sm p-5 h-36 transition-all duration-200 hover:shadow-md;
+}
+
+.metric-title {
+  @apply text-sm font-medium text-gray-500 uppercase tracking-wider mb-2;
+}
+
+.metric-value {
+  @apply text-3xl font-bold text-gray-900;
+}
+
+.metric-growth {
+  @apply text-sm font-medium flex items-center bg-gray-50 rounded-full px-3 py-1 mt-2 inline-block w-fit;
+}
+
+.metric-growth.positive {
+  @apply text-green-700 bg-green-50;
+}
+
+.metric-growth.negative {
+  @apply text-red-700 bg-red-50;
+}
+
+.tab-button {
+  @apply px-5 py-2.5 font-medium tracking-wide text-sm transition-all duration-200 rounded-lg mr-2;
+}
+
+.tab-button.active {
+  @apply bg-neo-sidebar text-white shadow-sm;
+}
+
+.tab-button.inactive {
+  @apply bg-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-100;
+}
+
+/* Cores especificas para redes sociais */
+.text-twitter {
+  color: #14171A;
+}
+
+.text-facebook {
+  color: #1877F2;
+}
+
+.text-instagram {
+  color: #E4405F;
+}
+
+.text-linkedin {
+  color: #0077B5;
+}
+
+.bg-twitter {
+  background-color: #14171A;
+}
+
+.bg-facebook {
+  background-color: #1877F2;
+}
+
+.bg-instagram {
+  background-color: #E4405F;
+}
+
+.bg-linkedin {
+  background-color: #0077B5;
+}
+
+/* Estilos para loading e transicoes */
+.fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsividade para dispositivos moveis */
+@media (max-width: 768px) {
+  .dashboard-title {
+    @apply text-xl;
+  }
+
+  .dashboard-subtitle {
+    @apply text-lg;
+  }
+
+  .metric-card {
+    @apply h-auto py-3;
+  }
+
+  .metric-value {
+    @apply text-xl;
+  }
+}
+
+/* Estilos para impressao */
+@media print {
+  body {
+    background-color: white;
+  }
+
+  .tab-button,
+  button,
+  .no-print {
+    display: none;
+  }
+
+  .card,
+  .metric-card {
+    box-shadow: none;
+    border: 1px solid #eaeaea;
+  }
+
+  .dashboard-title {
+    font-size: 18pt;
+  }
+
+  .dashboard-subtitle {
+    font-size: 16pt;
+  }
+}
+
+/* Utilitario para esconder a barra de rolagem (mas permitir scroll) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}

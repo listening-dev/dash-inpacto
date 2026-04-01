@@ -1,0 +1,61 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+/dist-server
+
+# misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# server data (persisted by DataStore)
+/server/data/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Dashboard backups and workflows (contain sensitive keys)
+MDA - *.json
+data_backup_*.json
+fp_test_keys.txt
+
+# Ferramentas de desenvolvimento local
+.claude/
+.agents/
+.trae/
+skills-lock.json
+
+# Relatório (feature em desenvolvimento — não publicar)
+src/components/relatorio/
+src/hooks/useRelatorioItens.ts
+src/hooks/useRelatorios.ts
+src/types/
+
+# Scripts de teste/utilitários com chaves hardcoded
+fetch_kpi.js
+update_n8n_v3.js
+update_stories_final.js
+update_yt_wf.js
+fk_test.json
+/tmp/

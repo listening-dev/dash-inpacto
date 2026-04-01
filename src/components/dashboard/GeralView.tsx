@@ -6,6 +6,7 @@ import type { PlatformMetrics } from '../../lib/metrics';
 import { PLATFORMS } from '../../config/platforms';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { fmtNum, fmtCard } from '../../utils/formatters';
+import { SkeletonKpiCard, SkeletonChart, SkeletonBlock } from '../ui/Skeleton';
 
 interface GeralViewProps {
   all: Omit<PlatformMetrics, 'loading' | 'error'>;
@@ -25,6 +26,7 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
   const [evolutionTab, setEvolutionTab] = useState<'reach' | 'interactions'>('reach');
   const [animatedAlcance, setAnimatedAlcance] = useState(0);
   const alcanceRef = useRef(0);
+  const prefersReducedMotion = useRef(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   const sbIG = byPlatform['instagram'];
   const sbFB = byPlatform['facebook'];
@@ -37,6 +39,13 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
   useEffect(() => {
     const target = (sbFB?.alcance ?? 0) + (sbIG?.alcance ?? 0) + (sbLI?.alcance ?? 0) + (sbTW?.alcance ?? 0);
     if (target === 0) return;
+
+    if (prefersReducedMotion.current) {
+      setAnimatedAlcance(target);
+      alcanceRef.current = target;
+      return;
+    }
+
     const duration = 1800;
     const start = alcanceRef.current;
     const startTime = performance.now();
@@ -118,9 +127,13 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
               <Users size={13} className="text-[#C0392B]" />
               <span className="text-sm text-[#C0392B] uppercase tracking-widest font-bold">Alcance Total</span>
             </div>
-            <div className="text-5xl font-black text-[#C0392B] tracking-tight leading-none">
-              {fmtCard(animatedAlcance)}
-            </div>
+            {loading ? (
+              <div className="h-12 w-24 bg-gray-200 rounded animate-pulse mx-auto my-1" />
+            ) : (
+              <div className="text-5xl font-black text-[#C0392B] tracking-tight leading-none">
+                {fmtCard(animatedAlcance)}
+              </div>
+            )}
             <div className="w-10 h-0.5 bg-[#E67E22] rounded-full mx-auto my-2.5"></div>
             <p className="text-lg text-gray-600 font-bold">Pessoas impactadas no período</p>
           </div>
@@ -128,67 +141,78 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
       </div>
 
       {/* 5 KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-        <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
-          <div className="absolute top-5 right-5">
-            <img src="/instagram.svg" alt="Instagram" className="w-5 h-5 brightness-0" />
-          </div>
-          <div className="mb-3">
-            <span className="text-xs font-bold text-black uppercase tracking-wider">Instagram</span>
-          </div>
-          <div className="text-3xl font-bold text-black">{fmtNum(sbIG?.alcance ?? 0)}</div>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbIG?.novosSeguidores ?? 0)} seguidores<MetricTooltip metric="novos_seguidores" /></p>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+          {Array.from({ length: 5 }).map((_, i) => <SkeletonKpiCard key={i} />)}
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+          {/* Instagram */}
+          <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
+            <div className="absolute top-5 right-5">
+              <img src="/instagram.svg" alt="Instagram" className="w-5 h-5 brightness-0" />
+            </div>
+            <div className="mb-3">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">Instagram</span>
+            </div>
+            <div className="text-3xl font-bold text-black">{fmtNum(sbIG?.alcance ?? 0)}</div>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbIG?.novosSeguidores ?? 0)} seguidores<MetricTooltip metric="novos_seguidores" /></p>
+          </div>
 
-        <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
-          <div className="absolute top-5 right-5">
-            <img src="/facebook.svg" alt="Facebook" className="w-5 h-5 brightness-0" />
+          {/* Facebook */}
+          <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
+            <div className="absolute top-5 right-5">
+              <img src="/facebook.svg" alt="Facebook" className="w-5 h-5 brightness-0" />
+            </div>
+            <div className="mb-3">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">Facebook</span>
+            </div>
+            <div className="text-3xl font-bold text-black">{fmtNum(sbFB?.alcance ?? 0)}</div>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbFB?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
           </div>
-          <div className="mb-3">
-            <span className="text-xs font-bold text-black uppercase tracking-wider">Facebook</span>
-          </div>
-          <div className="text-3xl font-bold text-black">{fmtNum(sbFB?.alcance ?? 0)}</div>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbFB?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
-        </div>
 
-        <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
-          <div className="absolute top-5 right-5">
-            <img src="/linkedin.svg" alt="LinkedIn" className="w-5 h-5 brightness-0" />
+          {/* LinkedIn */}
+          <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
+            <div className="absolute top-5 right-5">
+              <img src="/linkedin.svg" alt="LinkedIn" className="w-5 h-5 brightness-0" />
+            </div>
+            <div className="mb-3">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">LinkedIn</span>
+            </div>
+            <div className="text-3xl font-bold text-black">{fmtNum(sbLI?.alcance ?? 0)}</div>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbLI?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
           </div>
-          <div className="mb-3">
-            <span className="text-xs font-bold text-black uppercase tracking-wider">LinkedIn</span>
-          </div>
-          <div className="text-3xl font-bold text-black">{fmtNum(sbLI?.alcance ?? 0)}</div>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance" /></p>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbLI?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
-        </div>
 
-        <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
-          <div className="absolute top-5 right-5">
-            <img src="/x-twitter.svg" alt="X (Twitter)" className="w-5 h-5 brightness-0" />
+          {/* X / Twitter */}
+          <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
+            <div className="absolute top-5 right-5">
+              <img src="/x-twitter.svg" alt="X (Twitter)" className="w-5 h-5 brightness-0" />
+            </div>
+            <div className="mb-3">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">X (Twitter)</span>
+            </div>
+            <div className="text-3xl font-bold text-gray-400">N/D</div>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance_twitter" /></p>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600 block">+{fmtNum(sbTW?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
           </div>
-          <div className="mb-3">
-            <span className="text-xs font-bold text-black uppercase tracking-wider">X (Twitter)</span>
-          </div>
-          <div className="text-3xl font-bold text-gray-400">N/D</div>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">Alcance Total<MetricTooltip metric="alcance_twitter" /></p>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">+{fmtNum(sbTW?.interacoes ?? 0)} interações<MetricTooltip metric="interacoes" /></p>
-        </div>
 
-        <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
-          <div className="absolute top-5 right-5">
-            <BarChart3 size={20} className="text-black" />
+          {/* Engajamento */}
+          <div className="rounded-xl p-5 shadow-sm relative bg-white border border-gray-100">
+            <div className="absolute top-5 right-5">
+              <BarChart3 size={20} className="text-black" />
+            </div>
+            <div className="mb-3">
+              <span className="text-xs font-bold text-black uppercase tracking-wider">Engajamento</span>
+            </div>
+            <div className="text-3xl font-bold text-black">{fmtNum(all.interacoes)}</div>
+            <p className="text-xs mt-1 inline-flex items-center text-gray-600">Total Consolidado<MetricTooltip metric="interacoes_consolidado" /></p>
+            <p className="text-xs mt-1 text-gray-600">Todas as redes</p>
           </div>
-          <div className="mb-3">
-            <span className="text-xs font-bold text-black uppercase tracking-wider">Engajamento</span>
-          </div>
-          <div className="text-3xl font-bold text-black">{fmtNum(all.interacoes)}</div>
-          <p className="text-xs mt-1 inline-flex items-center text-gray-600">Total Consolidado<MetricTooltip metric="interacoes_consolidado" /></p>
-          <p className="text-xs mt-1 text-gray-600">Todas as redes</p>
         </div>
-      </div>
+      )}
 
       {/* Análise de Desempenho por Plataforma */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -211,7 +235,17 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
               </tr>
             </thead>
             <tbody>
-              {PLATFORMS.map(p => {
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-50">
+                    {Array.from({ length: 6 }).map((__, j) => (
+                      <td key={j} className="px-6 py-4">
+                        <SkeletonBlock className="h-3 rounded" style={{ width: j === 0 ? '60%' : '40%' } as React.CSSProperties} />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : PLATFORMS.map(p => {
                 const data = platformDataMap[p.id];
                 if (!data) return null;
                 return (
@@ -248,124 +282,145 @@ const GeralView: React.FC<GeralViewProps> = ({ all, byPlatform, loading, startDa
 
       {/* Evolução + Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <TrendingUp size={18} className="text-gray-800" />
-            {chartTitle}
-          </h3>
-
-          <div className="flex bg-gray-50/80 p-1 rounded-xl w-fit mb-6 border border-gray-100">
-            <button
-              onClick={() => setEvolutionTab('reach')}
-              className={`px-4 py-2 text-[11px] font-bold rounded-lg transition-all ${
-                evolutionTab === 'reach'
-                  ? 'bg-white text-[#C0392B] shadow-sm border border-gray-100'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Alcance x Visualizações
-            </button>
-            <button
-              onClick={() => setEvolutionTab('interactions')}
-              className={`px-4 py-2 text-[11px] font-bold rounded-lg transition-all ${
-                evolutionTab === 'interactions'
-                  ? 'bg-white text-[#C0392B] shadow-sm border border-gray-100'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Apenas Interações
-            </button>
-          </div>
-
-          {chartDataToUse.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartDataToUse} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} padding={{ left: 15, right: 15 }} />
-                <YAxis yAxisId="left" scale="sqrt" tickFormatter={(v) => fmtNum(v)} tick={{ fontSize: 12, fill: '#6b7280' }} width={65} />
-                <Tooltip formatter={(value: number) => fmtNum(value)} contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
-                <Legend />
-                {evolutionTab === 'reach' && (
-                  <Line yAxisId="left" type="monotone" dataKey="Alcance" stroke="#E67E22" strokeWidth={2} dot={{ r: 4 }} />
-                )}
-                {evolutionTab === 'reach' && (
-                  <Line yAxisId="left" type="monotone" dataKey="Visualizações" stroke="#C0392B" strokeWidth={2} dot={{ r: 4 }} />
-                )}
-                {evolutionTab === 'interactions' && (
-                  <Line yAxisId="left" type="monotone" dataKey="Interações" stroke="#4b4b4b" strokeWidth={2} dot={{ r: 4 }} />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-gray-400 text-sm">
-              {loading ? 'Carregando…' : 'Sem dados para o período selecionado'}
-            </div>
-          )}
-        </div>
-
-        {/* Insights */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Stars size={16} className="text-gray-800" />
-              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Destaques</h4>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-sm text-gray-600">Total de Posts</span>
-                <span className="font-bold text-gray-900">{all.posts.length}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-sm text-gray-600 inline-flex items-center">Novos Seguidores<MetricTooltip metric="novos_seguidores_consolidado" /></span>
-                <span className="font-bold text-green-700">+{fmtNum(all.novosSeguidores)}</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-sm text-gray-600 inline-flex items-center">Taxa Engajamento<MetricTooltip metric="engajamento_consolidado" /></span>
-                <span className="font-bold text-green-700">{all.engajamentoTaxa.toFixed(2)}%</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
-                <span className="text-sm text-gray-600">Melhor Dia</span>
-                <span className="font-bold text-gray-900">{all.bestDay}</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-gray-600">Horário de Pico</span>
-                <span className="font-bold text-gray-900">{all.peakTime}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <MouseIcon size={16} className="text-gray-800" />
-              Interações por Rede
-            </h4>
-            <div className="space-y-2">
-              {PLATFORMS.map(p => {
-                const data = platformDataMap[p.id];
-                if (!data) return null;
-                const maxVal = Math.max(
-                  sbIG?.interacoes ?? 0,
-                  sbFB?.interacoes ?? 0,
-                  sbLI?.interacoes ?? 0,
-                  sbTW?.interacoes ?? 0,
-                  1,
-                );
-                return (
-                  <div key={p.id}>
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span>{p.label}</span>
-                      <span className="font-bold">{fmtNum(data.interacoes)}</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(data.interacoes / maxVal) * 100}%`, backgroundColor: p.accentColor }}></div>
-                    </div>
+        {loading ? (
+          <>
+            <div className="lg:col-span-2"><SkeletonChart height={300} /></div>
+            <div className="space-y-4">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <SkeletonBlock className="h-4 w-24 mb-4" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex justify-between py-2 border-b border-gray-50">
+                    <SkeletonBlock className="h-3 w-28" />
+                    <SkeletonBlock className="h-3 w-10" />
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <TrendingUp size={18} className="text-gray-800" />
+                {chartTitle}
+              </h3>
+
+              <div className="flex bg-gray-50/80 p-1 rounded-xl w-fit mb-6 border border-gray-100">
+                <button
+                  onClick={() => setEvolutionTab('reach')}
+                  className={`px-4 py-2 text-[11px] font-bold rounded-lg transition-all ${
+                    evolutionTab === 'reach'
+                      ? 'bg-white text-[#C0392B] shadow-sm border border-gray-100'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Alcance x Visualizações
+                </button>
+                <button
+                  onClick={() => setEvolutionTab('interactions')}
+                  className={`px-4 py-2 text-[11px] font-bold rounded-lg transition-all ${
+                    evolutionTab === 'interactions'
+                      ? 'bg-white text-[#C0392B] shadow-sm border border-gray-100'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Apenas Interações
+                </button>
+              </div>
+
+              {chartDataToUse.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartDataToUse} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#6b7280' }} padding={{ left: 15, right: 15 }} />
+                    <YAxis yAxisId="left" scale="sqrt" tickFormatter={(v) => fmtNum(v)} tick={{ fontSize: 12, fill: '#6b7280' }} width={65} />
+                    <Tooltip formatter={(value: number) => fmtNum(value)} contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb' }} />
+                    <Legend />
+                    {evolutionTab === 'reach' && (
+                      <Line yAxisId="left" type="monotone" dataKey="Alcance" stroke="#E67E22" strokeWidth={2} dot={{ r: 4 }} />
+                    )}
+                    {evolutionTab === 'reach' && (
+                      <Line yAxisId="left" type="monotone" dataKey="Visualizações" stroke="#C0392B" strokeWidth={2} dot={{ r: 4 }} />
+                    )}
+                    {evolutionTab === 'interactions' && (
+                      <Line yAxisId="left" type="monotone" dataKey="Interações" stroke="#4b4b4b" strokeWidth={2} dot={{ r: 4 }} />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex flex-col items-center justify-center text-center gap-2 text-gray-400 text-sm">
+                  <div className="text-3xl">📊</div>
+                  <p>Sem dados para o período selecionado</p>
+                  <p className="text-xs">Tente ampliar o intervalo de datas.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Insights */}
+            <div className="space-y-4">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Stars size={16} className="text-gray-800" />
+                  <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Destaques</h4>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                    <span className="text-sm text-gray-600">Total de Posts</span>
+                    <span className="font-bold text-gray-900">{all.posts.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                    <span className="text-sm text-gray-600 inline-flex items-center">Novos Seguidores<MetricTooltip metric="novos_seguidores_consolidado" /></span>
+                    <span className="font-bold text-green-700">+{fmtNum(all.novosSeguidores)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                    <span className="text-sm text-gray-600 inline-flex items-center">Taxa Engajamento<MetricTooltip metric="engajamento_consolidado" /></span>
+                    <span className="font-bold text-green-700">{all.engajamentoTaxa.toFixed(2)}%</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                    <span className="text-sm text-gray-600">Melhor Dia</span>
+                    <span className="font-bold text-gray-900">{all.bestDay}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-sm text-gray-600">Horário de Pico</span>
+                    <span className="font-bold text-gray-900">{all.peakTime}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <MouseIcon size={16} className="text-gray-800" />
+                  Interações por Rede
+                </h4>
+                <div className="space-y-2">
+                  {PLATFORMS.map(p => {
+                    const data = platformDataMap[p.id];
+                    if (!data) return null;
+                    const maxVal = Math.max(
+                      sbIG?.interacoes ?? 0,
+                      sbFB?.interacoes ?? 0,
+                      sbLI?.interacoes ?? 0,
+                      sbTW?.interacoes ?? 0,
+                      1,
+                    );
+                    return (
+                      <div key={p.id}>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>{p.label}</span>
+                          <span className="font-bold">{fmtNum(data.interacoes)}</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${(data.interacoes / maxVal) * 100}%`, backgroundColor: p.accentColor }}></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

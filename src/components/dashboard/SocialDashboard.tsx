@@ -4,10 +4,11 @@ import DataTable from './DataTable';
 import { MetricTooltip } from '../ui/MetricTooltip';
 import { useSupabaseData, Post } from '../../hooks/useSupabaseData';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { differenceInDays, parseISO, format, addDays } from 'date-fns';
-import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, HeartHandshake } from 'lucide-react';
+import { differenceInDays, parseISO, format, addDays, startOfToday } from 'date-fns';
+import { TrendingUp, Eye, Heart, MessageCircle, Share2, Users, HeartHandshake, RefreshCw, Search, X as XIcon } from 'lucide-react';
 import { getPlatform } from '../../config/platforms';
 import { fmtNum } from '../../utils/formatters';
+import { SkeletonMetricCard, SkeletonKpiCard, SkeletonChart, SkeletonTableRow, SkeletonPostCard } from '../ui/Skeleton';
 
 interface SocialDashboardProps {
     platform: 'instagram' | 'facebook' | 'linkedin' | 'twitter';
@@ -21,8 +22,8 @@ interface SocialDashboardProps {
 export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     platform,
     mode,
-    startDate = '2025-08-01',
-    endDate = '2026-02-28',
+    startDate = format(startOfToday(), 'yyyy-MM-dd'),
+    endDate = format(startOfToday(), 'yyyy-MM-dd'),
     setStartDate,
     setEndDate,
 }) => {
@@ -41,7 +42,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     const flexTabs = [
         { id: 'geral', label: 'Performance Geral' },
         { id: 'posts', label: 'Posts & Formatos' },
-        { id: 'melhor', label: 'Melhor Post' },
+        { id: 'melhor', label: 'Melhores Posts' },
         { id: 'pior', label: 'Baixo Desempenho' }
     ];
 
@@ -55,6 +56,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'geral');
     const [sortField, setSortField] = useState<keyof Post>('visualizacoes');
     const [melhorPostIndex, setMelhorPostIndex] = useState(0);
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         setMelhorPostIndex(0);
@@ -162,11 +164,12 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     }, [sb.posts, sortField]);
 
     const worst5Posts = useMemo(() => {
-        let list = [...sb.posts].filter(p => p.formato !== 'STORY' && p.tipo_post !== 'STORY');
-        return list
+        const top5Ids = new Set(top5Posts.map(p => p.id));
+        return [...sb.posts]
+            .filter(p => p.formato !== 'STORY' && p.tipo_post !== 'STORY' && !top5Ids.has(p.id))
             .sort((a, b) => (Number(a[sortField]) || 0) - (Number(b[sortField]) || 0))
             .slice(0, 5);
-    }, [sb.posts, sortField]);
+    }, [sb.posts, sortField, top5Posts]);
 
     const getFallbackTitle = (f?: string) => {
         if (!f) return 'Post sem descricao';
@@ -188,7 +191,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
             <th onClick={() => setSortField(field)}
                 className={`text-right px-6 py-3 text-xs font-bold uppercase cursor-pointer hover:bg-gray-100 transition-colors select-none ${isActive ? 'text-gray-900 border-b-2 border-gray-400' : 'text-gray-500'}`}>
                 <span className="inline-flex items-center justify-end gap-0">
-                    {label} {isActive && '\uD83D\uDD3B'}
+                    {label} {isActive && '🔻'}
                     {tooltip && <MetricTooltip metric={tooltip} />}
                 </span>
             </th>
@@ -199,8 +202,8 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm animate-fadeIn">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900 flex items-center">
-                    <span className="mr-3 text-xl">{label === 'Melhor Post' ? '\uD83C\uDFC6' : '\uD83D\uDCC9'}</span>
-                    {label === 'Pior Post' ? 'Baixo Desempenho' : label}
+                    <span className="mr-3 text-xl">{label.startsWith('Melhores') ? '🏆' : '📉'}</span>
+                    {label}
                     <span className="text-gray-400 text-sm font-normal ml-2">({post.formato || 'Post'})</span>
                 </h2>
             </div>
@@ -233,7 +236,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                             <span className="bg-white text-gray-800 text-sm font-bold py-2 px-4 rounded-full opacity-0 group-hover:opacity-100 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all">
-                                Ver Post \u2197
+                                Ver Post
                             </span>
                         </div>
                     </div>
@@ -282,8 +285,30 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     );
 
     const renderFlexivel = () => {
-        if (sb.loading) return <div className="flex items-center justify-center h-64 text-gray-400">Carregando dados...</div>;
-        if (sb.error) return <div className="flex items-center justify-center h-64 text-red-500">Erro: {sb.error}</div>;
+        if (sb.loading) return (
+            <div className="space-y-6 animate-pulse">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {Array.from({ length: 6 }).map((_, i) => <SkeletonMetricCard key={i} />)}
+                </div>
+                <SkeletonChart height={280} />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => <SkeletonMetricCard key={i} />)}
+                </div>
+            </div>
+        );
+        if (sb.error) return (
+            <div className="flex flex-col items-center justify-center h-64 gap-4 text-center px-4">
+                <div className="text-4xl">⚠️</div>
+                <p className="text-gray-600 font-medium">Não foi possível carregar os dados.</p>
+                <p className="text-gray-400 text-sm">{sb.error}</p>
+                <button
+                    onClick={sb.refetch}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#C0392B] text-white text-sm font-medium rounded-lg hover:bg-[#A93226] transition-colors"
+                >
+                    <RefreshCw size={14} /> Tentar novamente
+                </button>
+            </div>
+        );
 
         if (activeTab === 'geral') {
             return (
@@ -360,6 +385,11 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
         }
 
         if (activeTab === 'posts') {
+            const q = searchQuery.toLowerCase().trim();
+            const matchPost = (p: Post) => !q || (p.titulo || '').toLowerCase().includes(q) || (p.formato || '').toLowerCase().includes(q);
+            const filteredTop5 = top5Posts.filter(matchPost);
+            const filteredWorst5 = worst5Posts.filter(matchPost);
+
             return (
                 <div className="space-y-6 animate-fadeIn">
                     {/* Format chart from real data */}
@@ -369,8 +399,29 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                             <HorizontalBarChart data={formatosData} metricLabel="posts" />
                         </div>
                     ) : (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 text-center text-gray-400">
-                            Nenhum post encontrado no periodo para analise de formatos.
+                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-10 text-center">
+                            <div className="text-4xl mb-3">📭</div>
+                            <p className="text-gray-600 font-medium">Nenhum post encontrado no período</p>
+                            <p className="text-gray-400 text-sm mt-1">Tente ajustar o intervalo de datas na barra lateral.</p>
+                        </div>
+                    )}
+
+                    {/* Shared search */}
+                    {sb.posts.length > 0 && (
+                        <div className="relative">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                placeholder="Buscar post por título ou formato..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-8 pr-8 py-2.5 text-sm border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-[#C0392B]/20 focus:border-[#C0392B] focus:outline-none transition-all"
+                            />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Limpar busca">
+                                    <XIcon size={14} />
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -378,7 +429,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                     {top5Posts.length > 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
                             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 className="font-bold text-gray-800">\uD83C\uDFC5 Top 5 Posts por {getMetricLabel()}</h3>
+                                <h3 className="font-bold text-gray-800">{'🏅'} Top 5 Posts por {getMetricLabel()}</h3>
                                 <span className="text-xs text-gray-500">Clique nas colunas para ordenar</span>
                             </div>
                             <div className="overflow-x-auto">
@@ -394,7 +445,9 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {top5Posts.map((p, i) => (
+                                        {filteredTop5.length === 0 ? (
+                                            <tr><td colSpan={6} className="px-6 py-6 text-center text-gray-400 text-sm">Nenhum resultado para "{searchQuery}"</td></tr>
+                                        ) : filteredTop5.map((p, i) => (
                                             <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                                                 <td className="px-6 py-3 font-bold text-gray-400">{i + 1}</td>
                                                 <td className="px-6 py-3">
@@ -426,7 +479,7 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                     {worst5Posts.length > 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                <h3 className="font-bold text-gray-800">\uD83D\uDCC9 5 Posts com Menor Desempenho por {getMetricLabel()}</h3>
+                                <h3 className="font-bold text-gray-800">{'📉'} 5 Posts com Menor Desempenho por {getMetricLabel()}</h3>
                                 <span className="text-xs text-gray-500">Clique nas colunas para ordenar</span>
                             </div>
                             <div className="overflow-x-auto">
@@ -442,7 +495,9 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {worst5Posts.map((p, i) => (
+                                        {filteredWorst5.length === 0 ? (
+                                            <tr><td colSpan={6} className="px-6 py-6 text-center text-gray-400 text-sm">Nenhum resultado para "{searchQuery}"</td></tr>
+                                        ) : filteredWorst5.map((p, i) => (
                                             <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                                                 <td className="px-6 py-3 font-bold text-gray-400">{i + 1}</td>
                                                 <td className="px-6 py-3">
@@ -475,13 +530,18 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
 
         if (activeTab === 'melhor') {
             const topPosts = sb.melhoresPosts?.length ? sb.melhoresPosts : (sb.melhorPost ? [sb.melhorPost] : []);
-            if (topPosts.length === 0) return <div className="text-gray-400 text-center py-12">Nenhum post encontrado no periodo.</div>;
+            if (topPosts.length === 0) return (
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+                    <div className="text-4xl">🏆</div>
+                    <p className="text-gray-600 font-medium">Nenhum post encontrado no período</p>
+                    <p className="text-gray-400 text-sm">Ajuste o intervalo de datas para ver os melhores posts.</p>
+                </div>
+            );
             const currentPost = topPosts[melhorPostIndex] ?? topPosts[0];
             return (
                 <div className="space-y-4">
-                    <PostCard post={currentPost} label={`Melhor Post`} themeColor="bg-green-50" />
                     {topPosts.length > 1 && (
-                        <div className="flex items-center justify-center gap-4">
+                        <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl px-5 py-3 shadow-sm">
                             <button
                                 onClick={() => setMelhorPostIndex(i => Math.max(0, i - 1))}
                                 disabled={melhorPostIndex === 0}
@@ -508,12 +568,19 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
                             </button>
                         </div>
                     )}
+                    <PostCard post={currentPost} label="Melhores Posts" themeColor="bg-green-50" />
                 </div>
             );
         }
 
         if (activeTab === 'pior') {
-            if (!sb.piorPost) return <div className="text-gray-400 text-center py-12">Nenhum post encontrado no periodo.</div>;
+            if (!sb.piorPost) return (
+                <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+                    <div className="text-4xl">📉</div>
+                    <p className="text-gray-600 font-medium">Nenhum post encontrado no período</p>
+                    <p className="text-gray-400 text-sm">Ajuste o intervalo de datas para ver posts com baixo desempenho.</p>
+                </div>
+            );
             return <PostCard post={sb.piorPost} label="Baixo Desempenho" themeColor="bg-red-50" />;
         }
 
@@ -521,7 +588,19 @@ export const SocialDashboard: React.FC<SocialDashboardProps> = ({
     };
 
     const renderFixo = () => {
-        if (sb.loading) return <div className="flex items-center justify-center h-64 text-gray-400">Carregando...</div>;
+        if (sb.loading) return (
+            <div className="space-y-6 animate-pulse">
+                <SkeletonChart height={180} />
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                        <div className="h-5 w-48 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                    <table className="w-full text-sm">
+                        <tbody>{Array.from({ length: 5 }).map((_, i) => <SkeletonTableRow key={i} cols={7} />)}</tbody>
+                    </table>
+                </div>
+            </div>
+        );
 
         const contaGeral = sb.monthly.map(m => ({
             mes: `${m.mes}/${m.ano.slice(2)}`,
