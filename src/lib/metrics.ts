@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase as defaultClient } from './supabaseClient';
 import { getPlatform, platformUsesCurtidasTotal, FORMAT_NORMALIZATION, PLATFORM_IDS } from '../config/platforms';
-import type { KpiSnapshotData, EvolucaoSnapshotRow, FormatoSnapshotRow, PostSnapshotRow, PlataformaSnapshotRow } from '../types/relatorio';
-
 // ─── Re-exported public types ────────────────────────────────────────────────
 
 export interface Post {
@@ -74,6 +72,41 @@ export interface PlatformMetrics {
     daily: DailyRow[];
     loading: boolean;
     error: string | null;
+}
+
+// ─── Snapshot row types (formerly in src/types/relatorio) ────────────────────
+
+export interface KpiSnapshotData {
+    alcance: number;
+    visualizacoes: number;
+    interacoes: number;
+    novosSeguidores: number;
+    totalSeguidores: number;
+    engajamentoTaxa: number;
+    platform: string;
+}
+
+export interface EvolucaoSnapshotRow {
+    label: string;
+    alcance: number;
+    visualizacoes: number;
+    interacoes: number;
+}
+
+export interface FormatoSnapshotRow {
+    formato: string;
+    count: number;
+}
+
+export type PostSnapshotRow = Post;
+
+export interface PlataformaSnapshotRow {
+    platform: string;
+    alcance: number;
+    visualizacoes: number;
+    interacoes: number;
+    novosSeguidores: number;
+    postsCount: number;
 }
 
 // ─── Raw row types (shapes of DB rows) ───────────────────────────────────────
