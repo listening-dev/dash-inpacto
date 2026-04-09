@@ -46,11 +46,6 @@ fp_test_keys.txt
 .trae/
 skills-lock.json
 
-# Relatório (feature em desenvolvimento — não publicar)
-src/components/relatorio/
-src/hooks/useRelatorioItens.ts
-src/hooks/useRelatorios.ts
-src/types/
 
 # Scripts de teste/utilitários com chaves hardcoded
 fetch_kpi.js
