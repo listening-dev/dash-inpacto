@@ -4,7 +4,7 @@ import GeralView from './GeralView';
 import Sidebar, { MobileDateBar } from './Sidebar';
 import RelatorioTab from '../relatorio/RelatorioTab';
 import BugReportModal from './BugReportModal';
-import { Lock, LogOut, Menu, X, Eye, EyeOff, FileText, AlertTriangle } from 'lucide-react';
+import { Lock, LogOut, Menu, X, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { format, subDays, startOfToday } from 'date-fns';
 import { supabase } from '../../lib/supabaseClient';
 import { useMetricsBatch } from '../../lib/metrics';
