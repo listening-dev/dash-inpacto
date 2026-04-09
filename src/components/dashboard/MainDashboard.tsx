@@ -2,19 +2,24 @@ import React, { useState } from 'react';
 import SocialDashboard from './SocialDashboard';
 import GeralView from './GeralView';
 import Sidebar, { MobileDateBar } from './Sidebar';
-import { Lock, LogOut, Menu, X, Eye, EyeOff } from 'lucide-react';
+import RelatorioTab from '../relatorio/RelatorioTab';
+import BugReportModal from './BugReportModal';
+import { Lock, LogOut, Menu, X, Eye, EyeOff, FileText, AlertTriangle } from 'lucide-react';
 import { format, subDays, startOfToday } from 'date-fns';
 import { supabase } from '../../lib/supabaseClient';
 import { useMetricsBatch } from '../../lib/metrics';
 import { PLATFORMS } from '../../config/platforms';
 import { useToast } from '../ui/Toast';
+import { useAuth } from '../../contexts/AuthContext';
 
 const MainDashboard = () => {
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState('geral');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [isBugReportOpen, setBugReportOpen] = useState(false);
   const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -69,6 +74,8 @@ const MainDashboard = () => {
   const renderContent = () => {
     const commonProps = { startDate, endDate, setStartDate, setEndDate };
 
+    if (activeTab === 'relatorio') return <RelatorioTab userId={user?.id || ''} />;
+
     if (activeTab === 'geral') {
       return (
         <GeralView
@@ -101,6 +108,9 @@ const MainDashboard = () => {
           <button onClick={openPasswordModal} className="text-white/60 hover:text-white p-1 flex items-center" aria-label="Alterar senha">
             <Lock size={18} />
           </button>
+          <button onClick={() => setBugReportOpen(true)} className="text-yellow-400 hover:text-yellow-300 p-1 flex items-center" aria-label="Reportar Problema" title="Reportar Problema">
+            <AlertTriangle size={18} />
+          </button>
           <button onClick={handleSignOut} className="text-red-400 hover:text-red-300 p-1 flex items-center" aria-label="Sair">
             <LogOut size={20} />
           </button>
@@ -126,6 +136,7 @@ const MainDashboard = () => {
         setIsMobileMenuOpen={setIsMobileMenuOpen}
         onPasswordChange={openPasswordModal}
         onSignOut={handleSignOut}
+        onBugReport={() => setBugReportOpen(true)}
       />
 
       {/* Main content */}
@@ -144,6 +155,13 @@ const MainDashboard = () => {
           </p>
         </div>
       </div>
+
+      <BugReportModal
+        isOpen={isBugReportOpen}
+        onClose={() => setBugReportOpen(false)}
+        userEmail={user?.email}
+        userId={user?.id}
+      />
 
       {/* Password modal */}
       {isPasswordModalOpen && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Calendar, History, Lock, LogOut } from 'lucide-react';
+import { ChevronDown, ChevronRight, Calendar, History, Lock, LogOut, FileText, AlertTriangle } from 'lucide-react';
 import { format, subDays, startOfToday, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { PLATFORMS } from '../../config/platforms';
 
@@ -234,6 +234,7 @@ export interface SidebarProps {
   setIsMobileMenuOpen: (open: boolean) => void;
   onPasswordChange: () => void;
   onSignOut: () => void;
+  onBugReport: () => void;
 }
 
 const SIDEBAR_ICON_FILTER = 'invert(27%) sepia(78%) saturate(2200%) hue-rotate(346deg) brightness(80%) contrast(95%)';
@@ -243,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   startDate, endDate, setStartDate, setEndDate,
   latestDataDate,
   isMobileMenuOpen, setIsMobileMenuOpen,
-  onPasswordChange, onSignOut,
+  onPasswordChange, onSignOut, onBugReport,
 }) => {
   const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>(() => {
     const initial: Record<string, boolean> = {};
@@ -321,10 +322,29 @@ const Sidebar: React.FC<SidebarProps> = ({
             ))}
           </div>
         </div>
+
+        <div className="bg-white rounded-xl p-4 mt-4">
+          <div className="mb-2 px-3 text-[15px] font-bold text-gray-800 uppercase tracking-widest">
+            Ferramentas
+          </div>
+          <NavItem
+            id="relatorio"
+            label="Relatório"
+            icon={<FileText size={20} style={{ color: '#e65220' }} />}
+            {...navProps}
+          />
+        </div>
       </nav>
 
       {/* Desktop footer */}
       <div className="p-4 border-t border-white/10 mt-auto hidden md:block space-y-2">
+        <button
+          onClick={onBugReport}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/10 text-yellow-100 hover:bg-yellow-500/20 hover:text-white rounded-xl transition-all font-medium text-sm"
+        >
+          <AlertTriangle size={16} />
+          Reportar Problema
+        </button>
         <button
           onClick={onPasswordChange}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-gray-200 hover:bg-white/10 hover:text-white rounded-xl transition-all font-medium text-sm"
