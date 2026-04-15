@@ -421,22 +421,25 @@ export function aggregatePlatform(
         finalLikes = likesFromMetrics > 0 ? likesFromMetrics : likesFromPosts;
     }
 
-    // Best / worst posts
-    const validPosts = postList.filter(p => p.visualizacoes > 0 && p.formato !== 'STORY');
-    const melhorPost = validPosts[0] || null;
-    const melhoresPosts = validPosts.slice(0, 3);
-    const piorPost = validPosts.length > 1
-        ? [...validPosts].sort((a, b) => a.visualizacoes - b.visualizacoes)[0]
+    // Best / worst posts - sorted by visualizações descending for reliable top/bottom selection
+    const sortedValidPosts = postList
+        .filter(p => p.visualizacoes > 0 && p.formato !== 'STORY')
+        .sort((a, b) => (b.visualizacoes || 0) - (a.visualizacoes || 0));
+    const melhorPost = sortedValidPosts[0] || null;
+    const melhoresPosts = sortedValidPosts.slice(0, 3);
+    // Pior post só é definido quando há mais de 3 posts, para não sobrepor com melhoresPosts
+    const piorPost = sortedValidPosts.length > 3
+        ? sortedValidPosts[sortedValidPosts.length - 1]
         : null;
 
     // bestDay and peakTime (scoring algorithm)
     let bestDay = '-';
     let peakTime = '-';
 
-    if (validPosts.length > 0) {
+    if (sortedValidPosts.length > 0) {
         const dayCounts: Record<number, number> = {};
         const hourCounts: Record<number, number> = {};
-        validPosts.forEach(p => {
+        sortedValidPosts.forEach(p => {
             const d = new Date(p.date);
             if (!isNaN(d.getTime())) {
                 const postInteractions = (p.curtidas || 0) + (p.comentarios || 0) + (p.compartilhamentos || 0) + (p.salvamentos || 0);
