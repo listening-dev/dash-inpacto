@@ -138,7 +138,7 @@ const SidebarDatePicker = ({ startDate, endDate, setStartDate, setEndDate, lates
     { label: '7D', preset: '7d' as const },
     { label: '30D', preset: '30d' as const },
     { label: 'Mês', preset: 'thisMonth' as const },
-    { label: 'Ant.', preset: 'lastMonth' as const },
+    { label: 'Mês Ant.', preset: 'lastMonth' as const },
     { label: '3M', preset: '3m' as const },
   ];
 
@@ -261,15 +261,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       } md:translate-x-0 transition-transform duration-300 fixed md:sticky top-[60px] md:top-0 h-[calc(100vh-60px)] md:h-screen w-64 md:min-w-[16rem] bg-[#C0392B] flex flex-col z-40 overflow-y-auto scrollbar-hide border-r border-white/10`}>
 
       {/* Logo */}
-      <div className="p-6 hidden md:block border-b border-white/10">
-        <div className="flex items-center mb-1">
-          <div className="w-20 h-20 rounded-lg bg-white mr-3 flex items-center justify-center overflow-hidden p-3">
-            <img src="/logo-inpacto.png" alt="Logo In.Pacto" className="w-full h-full object-contain scale-125" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white tracking-tight leading-tight">Dashboard Redes</h1>
-            <p className="text-sm text-white font-medium">In.Pacto</p>
-          </div>
+      <div className="px-5 py-4 hidden md:flex items-center gap-4 border-b border-white/10">
+        <img src="/logo-inpacto.png" alt="Logo In.Pacto" className="h-14 w-auto object-contain flex-shrink-0" />
+        <div className="border-l border-white/30 pl-4">
+          <h1 className="text-lg font-bold text-white tracking-tight leading-snug">Dashboard</h1>
+          <h1 className="text-lg font-bold text-white tracking-tight leading-snug">Redes</h1>
         </div>
       </div>
 
