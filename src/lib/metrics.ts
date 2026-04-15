@@ -375,7 +375,7 @@ export function aggregatePlatform(
     // Aggregate basic metrics from daily_metrics rows
     const visualizacoes = rows.reduce((s, r) => s + (r.visualizacoes || 0), 0);
     const alcance = rows.reduce((s, r) => s + (r.alcance || 0), 0);
-    const interacoes = rows.reduce((s, r) => s + (r.interacoes || 0), 0);
+    const interacoes = Math.max(0, rows.reduce((s, r) => s + (r.interacoes > 0 ? r.interacoes : 0), 0));
     const novosSeguidores = rows.reduce((s, r) => s + (r.novos_seguidores || 0), 0);
     const visitasPerfil = rows.reduce((s, r) => s + (r.visitas_perfil || 0), 0);
     const cliquesLink = rows.reduce((s, r) => s + (r.cliques_link || 0), 0);

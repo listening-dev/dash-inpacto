@@ -1,0 +1,745 @@
+{
+  "name": "In.Pacto - Instagram - Daily Metrics",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Calcula o periodo = ontem\nconst now = new Date();\nnow.setDate(now.getDate() - 1);\nconst yyyy = now.getFullYear();\nconst mm = String(now.getMonth() + 1).padStart(2, '0');\nconst dd = String(now.getDate()).padStart(2, '0');\n\nconst periodDate = `${yyyy}-${mm}-${dd}`;\nconst period = `${periodDate}_${periodDate}`;\n\nreturn {\n  json: {\n    periodDate,\n    period\n  }\n};"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Calcular Periodo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://app.fanpagekarma.com/api/v1/instagram/PROFILE_ID_AQUI/kpi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "TOKEN_AQUI"
+            },
+            {
+              "name": "period",
+              "value": "={{ $json.period }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000010",
+      "name": "KPI Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const v = (d, key) => {\n  if (!d) return 0;\n  let raw = d[key];\n  if (raw === undefined || raw === null) return 0;\n  if (typeof raw === 'object' && raw.value !== undefined) raw = raw.value;\n  if (typeof raw === 'string') return parseFloat(raw.replace(',', '.')) || 0;\n  return Number(raw) || 0;\n};\nconst vnn = (d, key) => Math.max(0, v(d, key));\n\nconst allItems = $input.all();\nconst allPeriods = $('Calcular Periodo').all();\nconst results = [];\n\nfor (let i = 0; i < allItems.length; i++) {\n  const input = allItems[i].json;\n  const data = input.data || input;\n  const periodDate = allPeriods[i].json.periodDate;\n  results.push({ json: {\n    platform: 'instagram', date: periodDate,\n    visualizacoes: vnn(data, 'profile_meta_views') || vnn(data, 'media_views'),\n    alcance: vnn(data, 'profile_reach'),\n    interacoes: vnn(data, 'profile_total_interactions'),\n    novos_seguidores: v(data, 'profile_followers_growth_absolute'),\n    total_seguidores: vnn(data, 'profile_followers'),\n    visitas_perfil: vnn(data, 'profile_profile_views'),\n    cliques_link: vnn(data, 'profile_website_clicks'),\n    posts_count: vnn(data, 'profile_media_count'),\n    curtidas_total: vnn(data, 'profile_in_likes_on_day')\n  } });\n}\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000011",
+      "name": "Formatar Metricas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SUPABASE_URL_AQUI.supabase.co/rest/v1/daily_metrics?on_conflict=platform,date",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SERVICE_ROLE_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Accept-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000012",
+      "name": "Supabase daily_metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://app.fanpagekarma.com/api/v1/instagram/PROFILE_ID_AQUI/posts",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "TOKEN_AQUI"
+            },
+            {
+              "name": "period",
+              "value": "={{ $json.period }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000020",
+      "name": "Posts Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const v = (d, key) => {\n  if (!d) return 0;\n  let raw = d[key];\n  if (raw === undefined || raw === null) return 0;\n  if (typeof raw === 'object' && raw.value !== undefined) raw = raw.value;\n  if (typeof raw === 'string') return parseFloat(raw.replace(',', '.')) || 0;\n  return Number(raw) || 0;\n};\n\nconst allItems = $input.all();\nconst allPeriods = $('Calcular Periodo').all();\nconst results = [];\n\nfor (let i = 0; i < allItems.length; i++) {\n  const input = allItems[i].json;\n  const posts = (input.data && input.data.posts) || (Array.isArray(input.data) ? input.data : (input.data && input.data.items || [])) || input.posts || [];\n  const periodDate = allPeriods[i].json.periodDate;\n\n  for (const post of (Array.isArray(posts) ? posts : [])) {\n    if (!post || !post.id) continue;\n    const kpi = post.kpi || post;\n    let postDate = periodDate;\n    if (post.date) {\n      const parsed = new Date(post.date);\n      if (!isNaN(parsed)) {\n        const y = parsed.getUTCFullYear();\n        const m = String(parsed.getUTCMonth() + 1).padStart(2, '0');\n        const d = String(parsed.getUTCDate()).padStart(2, '0');\n        postDate = `${y}-${m}-${d}`;\n      }\n    }\n    results.push({ json: {\n      platform: 'instagram', external_id: post.id, date: postDate,\n      formato: post.type || 'OUTRO',\n      titulo: (post.message || '').substring(0, 500),\n      thumbnail_url: ((post.image || '').startsWith('http') ? (post.image || '') : ''),\n      permalink: post.link || '',\n      visualizacoes: v(kpi, 'page_post_impressions_organic') || v(kpi, 'profile_post_crossposted_views'),\n      curtidas: v(kpi, 'page_posts_likes_count') || v(kpi, 'profile_likes_count_total'),\n      comentarios: v(kpi, 'page_posts_comments_count') || v(kpi, 'profile_comments_count_total'),\n      compartilhamentos: v(kpi, 'page_posts_shares_count'),\n      salvamentos: v(kpi, 'profile_post_saved'),\n      alcance: v(kpi, 'page_posts_impressions_organic_unique'),\n      reactions: Math.round(v(kpi, 'profile_post_total_interactions')),\n      tipo_post: post.type || 'OUTRO'\n    } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { _empty: true } }];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000021",
+      "name": "Formatar Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-post-img",
+              "leftValue": "={{ $json.thumbnail_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000022",
+      "name": "Tem Imagem Post?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.thumbnail_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000023",
+      "name": "Download Imagem Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://SUPABASE_URL_AQUI.supabase.co/storage/v1/object/posts_images/instagram/{{ $('Formatar Posts').item.json.external_id }}.jpg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SERVICE_ROLE_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000024",
+      "name": "Upload Imagem Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allItems = $input.all();\nconst results = [];\n\nfor (const item of allItems) {\n  const data = item.json;\n  const publicUrl = `https://SUPABASE_URL_AQUI.supabase.co/storage/v1/object/public/posts_images/instagram/${data.external_id}.jpg`;\n  results.push({ json: { ...data, thumbnail_url: publicUrl } });\n}\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000025",
+      "name": "Atualizar URL Post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SUPABASE_URL_AQUI.supabase.co/rest/v1/posts?on_conflict=platform,external_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SERVICE_ROLE_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Accept-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000026",
+      "name": "Supabase posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://app.fanpagekarma.com/api/v1/instagram/PROFILE_ID_AQUI/stories",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "TOKEN_AQUI"
+            },
+            {
+              "name": "period",
+              "value": "={{ $json.period }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000030",
+      "name": "Stories Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const v = (d, key) => {\n  if (!d) return 0;\n  let raw = d[key];\n  if (raw === undefined || raw === null) return 0;\n  if (typeof raw === 'object' && raw.value !== undefined) raw = raw.value;\n  if (typeof raw === 'string') return parseFloat(raw.replace(',', '.')) || 0;\n  return Number(raw) || 0;\n};\n\nconst allItems = $input.all();\nconst allPeriods = $('Calcular Periodo').all();\nconst results = [];\n\nfor (let i = 0; i < allItems.length; i++) {\n  const input = allItems[i].json;\n  const data = input.data || input;\n  const stories = (input.data && (input.data.stories || input.data.posts || input.data.items)) || (Array.isArray(data) ? data : (data.stories || data.items || []));\n  const periodDate = allPeriods[i].json.periodDate;\n\n  for (const story of (Array.isArray(stories) ? stories : [])) {\n    if (!story) continue;\n    const kpi = story.kpi || story;\n    const externalId = story.id || story.link || `story_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;\n    results.push({ json: {\n      platform: 'instagram', external_id: externalId, date: periodDate,\n      media_type: story.type || 'STORY',\n      thumbnail_url: story.image || '',\n      permalink: story.link || '',\n      impressoes: v(kpi, 'profile_story_impressions'),\n      alcance: v(kpi, 'profile_story_reach'),\n      respostas: v(kpi, 'profile_story_replies'),\n      saidas: v(kpi, 'profile_story_exits'),\n      toques_frente: v(kpi, 'profile_story_taps_forward'),\n      toques_atras: v(kpi, 'profile_story_taps_back')\n    } });\n  }\n}\n\nreturn results.length > 0 ? results : [{ json: { _empty: true } }];"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000031",
+      "name": "Formatar Stories",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-story-img",
+              "leftValue": "={{ $json.thumbnail_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000032",
+      "name": "Tem Imagem Story?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        980,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.thumbnail_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000033",
+      "name": "Download Imagem Story",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://SUPABASE_URL_AQUI.supabase.co/storage/v1/object/posts_images/stories/{{ $('Formatar Stories').item.json.external_id }}.jpg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SERVICE_ROLE_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            },
+            {
+              "name": "x-upsert",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000034",
+      "name": "Upload Imagem Story",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const allItems = $input.all();\nconst results = [];\n\nfor (const item of allItems) {\n  const data = item.json;\n  const publicUrl = `https://SUPABASE_URL_AQUI.supabase.co/storage/v1/object/public/posts_images/stories/${data.external_id}.jpg`;\n  results.push({ json: { ...data, thumbnail_url: publicUrl } });\n}\n\nreturn results;"
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000035",
+      "name": "Atualizar URL Story",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://SUPABASE_URL_AQUI.supabase.co/rest/v1/stories?on_conflict=platform,external_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "ANON_KEY_AQUI"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer SERVICE_ROLE_KEY_AQUI"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Content-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Accept-Profile",
+              "value": "inpacto"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000036",
+      "name": "Supabase stories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        600
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Calcular Periodo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Periodo": {
+      "main": [
+        [
+          {
+            "node": "KPI Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Posts Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Stories Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KPI Instagram": {
+      "main": [
+        [
+          {
+            "node": "Formatar Metricas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Metricas": {
+      "main": [
+        [
+          {
+            "node": "Supabase daily_metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Posts Instagram": {
+      "main": [
+        [
+          {
+            "node": "Formatar Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Posts": {
+      "main": [
+        [
+          {
+            "node": "Tem Imagem Post?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Imagem Post?": {
+      "main": [
+        [
+          {
+            "node": "Download Imagem Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Imagem Post": {
+      "main": [
+        [
+          {
+            "node": "Upload Imagem Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Imagem Post": {
+      "main": [
+        [
+          {
+            "node": "Atualizar URL Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar URL Post": {
+      "main": [
+        [
+          {
+            "node": "Supabase posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stories Instagram": {
+      "main": [
+        [
+          {
+            "node": "Formatar Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Stories": {
+      "main": [
+        [
+          {
+            "node": "Tem Imagem Story?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Imagem Story?": {
+      "main": [
+        [
+          {
+            "node": "Download Imagem Story",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Imagem Story": {
+      "main": [
+        [
+          {
+            "node": "Upload Imagem Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Imagem Story": {
+      "main": [
+        [
+          {
+            "node": "Atualizar URL Story",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar URL Story": {
+      "main": [
+        [
+          {
+            "node": "Supabase stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-03-30T00:00:00.000Z",
+  "versionId": "1"
+}
